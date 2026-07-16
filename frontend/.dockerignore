@@ -1,0 +1,14 @@
+node_modules
+.next
+out
+build
+coverage
+.env*
+!.env.example
+npm-debug.log*
+.DS_Store
+*.pem
+.vercel
+tsconfig.tsbuildinfo
+Dockerfile
+.dockerignore
