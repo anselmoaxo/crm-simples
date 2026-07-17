@@ -204,12 +204,16 @@ export default function ClientesPage() {
             </DialogHeader>
             <ClienteForm
               initialData={editingCliente ?? undefined}
-              onSubmit={(data) =>
-                (editingCliente
+              onSubmit={async (data) => {
+                try {
+                  await (editingCliente
                   ? updateMutation.mutateAsync({ id: editingCliente.id, formData: data })
                   : createMutation.mutateAsync(data)
-                ).then(() => {})
-              }
+                  )
+                } catch {
+                  // The mutation already displays the API error in a toast.
+                }
+              }}
               onCancel={() => {
                 setDialogOpen(false)
                 setEditingCliente(null)

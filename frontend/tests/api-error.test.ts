@@ -4,9 +4,12 @@ import { createError } from '@/lib/api/client'
 
 describe('createError', () => {
   it('normaliza o envelope de erro da aplicação', () => {
-    expect(createError(403, {
+    const error = createError(403, {
       error: { code: 'ACESSO_NEGADO', message: 'Sem permissão.', details: null },
-    })).toMatchObject({
+    })
+
+    expect(error).toBeInstanceOf(Error)
+    expect(error).toMatchObject({
       status: 403,
       code: 'ACESSO_NEGADO',
       message: 'Sem permissão.',

@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from app.api.routes.dashboard import _count_atividades_vencidas, atividades_pendentes
 from app.repositories.atividade_repository import AtividadeRepository
+from app.repositories.cliente_repository import ClienteRepository
 from app.repositories.perfil_repository import PerfilRepository
 from app.schemas.contatos import ContatoCreate, ContatoResponse
 from app.schemas.funis import FunilCreate, FunilResponse
@@ -63,6 +64,41 @@ def test_profile_lookup_handles_maybe_single_none_response():
     query.execute = lambda: None
 
     assert PerfilRepository(SupabaseSpy(query)).get_by_usuario_id("user-without-profile") is None
+
+
+def test_client_type_is_translated_between_api_and_database():
+    query = QuerySpy(
+        data=[
+            {
+                "id": "cliente-1",
+                "empresa_id": "empresa-1",
+                "tipo_pessoa": "F",
+                "nome": "Cliente",
+                "ativo": True,
+            }
+        ]
+    )
+
+    result = ClienteRepository(SupabaseSpy(query)).create(
+        {
+            "empresa_id": "empresa-1",
+            "tipo_pessoa": "FISICA",
+            "nome": "Cliente",
+            "ativo": True,
+        }
+    )
+
+    assert query.payload["tipo_pessoa"] == "F"
+    assert result["tipo_pessoa"] == "FISICA"
+
+
+def test_client_list_translates_legal_person_type_from_database():
+    query = QuerySpy(data=[{"id": "cliente-1", "tipo_pessoa": "J"}], count=1)
+
+    rows, total = ClienteRepository(SupabaseSpy(query)).list("empresa-1")
+
+    assert total == 1
+    assert rows[0]["tipo_pessoa"] == "JURIDICA"
 
 
 def test_profile_contract_does_not_require_database_email_or_usuario_id():

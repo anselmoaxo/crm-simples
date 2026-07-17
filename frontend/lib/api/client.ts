@@ -1,11 +1,16 @@
 import { createClient } from '@/lib/supabase/client'
 import { getApiUrl } from '@/lib/api/url'
 
-export interface ApiError {
-  code: string
-  message: string
-  status: number
-  details?: unknown
+export class ApiError extends Error {
+  constructor(
+    public readonly status: number,
+    public readonly code: string,
+    message: string,
+    public readonly details?: unknown,
+  ) {
+    super(message)
+    this.name = 'ApiError'
+  }
 }
 
 async function getAccessToken(): Promise<string | null> {
@@ -56,12 +61,12 @@ export function createError(status: number, body: Record<string, unknown>): ApiE
   const nestedError = (body.error ?? detailObject?.error) as Record<string, unknown> | undefined
   const source = nestedError ?? detailObject ?? body
   const normalizedMessage = validationMessage(source.message ?? source.detail ?? detail)
-  return {
-    code: (source.code as string) ?? 'UNKNOWN_ERROR',
-    message: normalizedMessage ?? messageForStatus(status),
+  return new ApiError(
     status,
-    details: source.details ?? body,
-  }
+    (source.code as string) ?? 'UNKNOWN_ERROR',
+    normalizedMessage ?? messageForStatus(status),
+    source.details ?? body,
+  )
 }
 
 function messageForStatus(status: number): string {
